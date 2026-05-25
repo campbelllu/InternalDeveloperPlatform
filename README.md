@@ -26,10 +26,10 @@ Further folders will contain other IaC resources as they are added for functiona
 
 ### How It Works
 1. The Foundation Terraform files are run to simulate a company environment, setting up the 'foundation' upon which all developers would be working anyway.
-2. The CLI tool is invoked to create a public subnet on the `VPC` where the developer may deploy and test their code. This subnet has a security group attached that allows zero ingress of networking traffic outside of what is allowed via `AWS SSM`. [^1]
+2. The CLI tool is invoked to create a public subnet on the `VPC` where the developer may deploy and test their code. This subnet has a security group attached that allows zero ingress of networking traffic outside of what is allowed via `AWS SSM`.[^1]
 3. This new IDP can now be accessed by the developer to deploy code and test in a mock-production environment.
 4. More steps to come.
 
 
 ### References
-[^1] This IDP, the subnet created, could be configured to be a private subnet, which would require a `NAT Gateway` present on the `VPC`, and this was avoided for this project to keep costs low during production and testing. `VPN`'s could also be used to grant access to these IDP's, but setting up a corporate `VPN` for these purposes is outside of the scope of this project.
+[^1]: This IDP, the subnet created, could be configured to be a private subnet, which would require a `NAT Gateway` present on the `VPC`, and this was avoided for this project to keep costs low during production and testing. `VPN`'s could also be used to grant access to these IDP's, but setting up a corporate `VPN` for these purposes is outside of the scope of this project.
