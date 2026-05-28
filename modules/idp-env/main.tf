@@ -93,7 +93,7 @@ data "aws_ami" "ubuntu" {
 # Infrastructure
 # ==============================================
 
-# The Server 
+# The Server, tagged so the dev can find it, and for the Reaper to eliminate it
 resource "aws_instance" "dev_node" {
   ami                  = data.aws_ami.ubuntu.id
   instance_type        = var.instance_type
@@ -102,7 +102,16 @@ resource "aws_instance" "dev_node" {
 
   vpc_security_group_ids = [aws_security_group.sg.id]
 
-  tags = { Name = var.env_name }
+  # THE CURFEW CRON SCRIPT:
+  user_data = <<-EOF
+              #!/bin/bash
+              # Create a cron job inside the EC2 to shut down automatically every Friday at 21:00 (9 PM)
+              echo "0 21 * * 5 root /sbin/shutdown -h now" >> /etc/crontab
+              EOF
+
+  tags = { Name = var.env_name
+           ManagedBy = "IDP-CLI"
+  }
 }
 
 ########################################################################################

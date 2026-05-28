@@ -1,0 +1,55 @@
+### To any poor souls who actually read this
+
+Disregard this entire document. This is just notes for what I need to do next, or scraps to add to the README.
+omg why are you still reading this? save yourself, look away! <3
+
+---------------
+rds is a cost sink and aws takes 5-10 minutes to spin up new RDS instances.
+
+
+
+Database Layer Design DecisionArchitecture Choice: Containerized Local Databases (Docker) vs. Managed AWS RDS.Decision: Intentionally opted out of dedicated AWS RDS instances per developer sandbox.Justification: For ephemeral crash-testing, RDS introduces a 7-minute provisioning latency and a ~$15/month idle cost penalty per environment.Implementation: The IDP provisions an EC2 node pre-configured for multi-container runtimes. Developers spin up their application and database side-by-side using docker-compose. This cuts environment creation time to under 45 seconds and maintains a near-zero cost profile.
+
+------------------------------------
+
+The Reality: Logs are Already LocalSince your developers are connecting to the instance using AWS Systems Manager (SSM), they are dropped directly into a secure shell on the EC2 machine. They have instant, real-time access to everything they need:If their app sucks and crashes a container, they just run docker logs <container_id> or docker compose logs.If the Docker daemon itself crashes, they can look at the system logs directly using sudo journalctl -u docker.Because the environment is actively being used for a live debugging session, there is absolutely no reason to ship those logs out to AWS.
+
+Log Aggregation and ObservabilityArchitecture Choice: Local Host Observability vs. Centralized CloudWatch Streaming.Decision: Intentionally bypassed installing CloudWatch log aggregation agents on the ephemeral instances.Justification: Centralized log streaming adds ~$0.50/GB in AWS ingestion costs and slows down instance bootstrap speeds.Implementation: Because developers maintain direct, secure shell access via AWS Systems Manager, observability is handled natively on the host using standard Linux commands (docker compose logs and journalctl). If an environment experiences a catastrophic failure, the platform philosophy dictates destroying it and recreating it via the CLI rather than debugging an ephemeral host indefinitely.
+
+
+Documentation Blueprint: Observability Architecture
+Status: Infrastructure Ready / Application Out-of-Scope
+The Goal: The IDP is fully capable of bootstrapping a telemetry stack (Prometheus + Grafana) alongside ephemeral developer subnets using Dashboard-as-Code.
+Engineering Decision: To minimize compute costs and maintain focus on core platform engineering mechanics (subnet provisioning, automated lifecycle teardown, and IAM scoping), active application performance monitoring (APM) is marked as out-of-scope for Phase 1.
+Proof of Concept: The infrastructure pipeline successfully deploys Node Exporter on the developer EC2 instance to mimic infrastructure load. Below are screenshots of the automated Grafana dashboard validating the end-to-end data pipeline before the ephemeral environment is torn down:
+[Insert your Grafana screenshots here]
+Next Steps for Production Rollout: To fully onboard an engineering team, developers must expose a /metrics endpoint on port 8080 in their deployment manifests, allowing the platform's central Prometheus server to auto-discover their workload.
+
+-----------------------
+
+reaper or ttl automated janitor
+the cost containment protocol
+"For this MVP project, I used a localized EC2 cron-bomb to stop compute costs and kept the architecture simple to avoid a $30/month AWS Load Balancer fee. However, because I know developers always forget to clean up, I've outlined the exact enterprise strategy in my ADRs. In a real production environment, you would swap my local strategy for a central AWS Lambda 'Reaper' function that scans lifecycle tags and triggers a total cleanup. I even left a placeholder architectural file in the repo to show exactly how that script would map out."
+
+--------------------
+
+### 🔑 Prerequisites: Local Session Manager Plugin (Ubuntu/Linux Mint)
+Because this platform utilizes identity-based tunneling instead of legacy SSH key pairs, developers must install the AWS Session Manager plugin locally to access their sandboxes.
+
+Run the following commands in your terminal to download and install the official 64-bit Debian package:
+
+```bash
+# 1. Download the official package directly from the AWS S3 bundle storage
+curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb"
+
+# 2. Install the package locally
+sudo dpkg -i session-manager-plugin.deb
+
+# 3. Verify the installation succeeds
+session-manager-plugin --version
+
+# 4. Clean up the installer binary
+rm session-manager-plugin.deb
+```
+
+Once verified, your local AWS CLI will automatically utilize this plugin behind the scenes whenever your Go CLI executes a terminal connection session.
