@@ -33,7 +33,7 @@ the cost containment protocol
 
 --------------------
 
-### 🔑 Prerequisites: Local Session Manager Plugin (Ubuntu/Linux Mint)
+### Prerequisites: Local Session Manager Plugin (Ubuntu/Linux Mint)
 Because this platform utilizes identity-based tunneling instead of legacy SSH key pairs, developers must install the AWS Session Manager plugin locally to access their sandboxes.
 
 Run the following commands in your terminal to download and install the official 64-bit Debian package:
