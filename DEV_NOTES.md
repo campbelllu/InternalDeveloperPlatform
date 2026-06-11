@@ -27,6 +27,15 @@ Next Steps for Production Rollout: To fully onboard an engineering team, develop
 
 -----------------------
 
+why have --list return values from local tf state file when it won't work like that in production? ideally, it'd use AWS CLI to query for tags created by this CLI tool to return to the user. AI Overlord helped me cook up a first draft for how to explain this design choice for this project. (aws ec2 describe-instances --filters "Name=tag:ManagedBy,Values=IDP-CLI")
+### 📋 Platform Visibility & State Sync
+**Architecture Choice**: Local Directory Scanning vs. Remote S3 Object Inventory.
+* **Current State (MVP)**: The `--list` command queries the local `terraform.tfstate.d` workspace directory for state receipts. This provides a zero-latency, cost-free demonstration environment for single-operator testing.
+* **Production Scaling Plan**: In a multi-developer enterprise environment, this function would be refactored to utilize the AWS SDK to scan the shared S3 remote state bucket prefix or run an `ec2:DescribeInstances` query filtered by the `ManagedBy = "IDP-CLI"` tag. This ensures a single, centralized source of truth across all developer workstations without local state fragmentation.
+
+
+------------------------
+
 reaper or ttl automated janitor
 the cost containment protocol
 "For this MVP project, I used a localized EC2 cron-bomb to stop compute costs and kept the architecture simple to avoid a $30/month AWS Load Balancer fee. However, because I know developers always forget to clean up, I've outlined the exact enterprise strategy in my ADRs. In a real production environment, you would swap my local strategy for a central AWS Lambda 'Reaper' function that scans lifecycle tags and triggers a total cleanup. I even left a placeholder architectural file in the repo to show exactly how that script would map out."
