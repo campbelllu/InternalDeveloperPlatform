@@ -1,7 +1,3 @@
-### SSM/Identity mgmt. All ingress ports closed. AWS CLI uses IAM creds to tunnel to IDP.
-
-### Generated code to start this SSM integration, needs to be integrated into this page before any of this works, but I'm sleeping now
-
 # ==============================================
 # Security
 # ==============================================
@@ -10,7 +6,7 @@ resource "aws_security_group" "sg" {
   name   = "${var.env_name}-sg"
   vpc_id = var.vpc_id
 
-  # Ingress Rules: Deprecated due to SSM below
+  # Ingress Rules: Deprecated due to SSM below. All ingress ports closed. AWS CLI uses IAM creds to tunnel to IDP.
   # Allow Web Traffic ONLY from the Dev's local IP; HTTP/S and SSH
   # ingress {
   #   description = "HTTP from dev"
@@ -42,7 +38,6 @@ resource "aws_security_group" "sg" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
-
 
 # ==============================================
 # IAM for SSM Setup

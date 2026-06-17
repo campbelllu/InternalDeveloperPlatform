@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"path/filepath"
 	"strings"
+	"time"
 )
 
 // Grabs Network ID's; multiple versions representing how this is possible are located at the end of this script
@@ -23,7 +23,6 @@ func fetchFoundationIDs() (string, string, error) {
 
 	// Open the config file
 	configFile, err := os.ReadFile(".idp-config.json")
-
 	if err != nil {
 		return "", "", fmt.Errorf("Missing configuration file! Ensure platform setup is complete: %v", err)
 	}
@@ -31,7 +30,6 @@ func fetchFoundationIDs() (string, string, error) {
 	// Parse the JSON text into a real Go structure
 	var config IDPConfig
 	err = json.Unmarshal(configFile, &config)
-
 	if err != nil {
 		return "", "", fmt.Errorf("Corrupted configuration file format: %v", err)
 	}
@@ -76,14 +74,12 @@ func parseFlags() (CLIArgs, error) {
 	return args, nil
 }
 
-// Luke test this once evn's exist
 // Scan the local state directory to report open sandboxes
 func listEnvironments() {
-	stateDir := "./foundation/terraform.tfstate.d"
+	stateDir := "./modules/idp-env/terraform.tfstate.d" //moved from foundation/
 
 	// Open the directory and read its contents
 	files, err := os.ReadDir(stateDir)
-
 	if err != nil || len(files) == 0 {
 		fmt.Println("\n===============================")
 		fmt.Println("ZERO active environments found.")
@@ -96,38 +92,63 @@ func listEnvironments() {
 	fmt.Println("------------------------------------------")
 
 	for _, file := range files {
-		// Only look for files ending in .tfstate
-		if !file.IsDir() && filepath.Ext(file.Name()) == ".tfstate" {
-			// Strip the ".tfstate" extension off to print a clean name string
-			cleanName := strings.TrimSuffix(file.Name(), ".tfstate")
-			fmt.Printf(" %s\n", cleanName)
+		// Native Workspaces use directories to isolate tracking metadata
+		if file.IsDir() {
+			envName := file.Name()
+
+			// Skip the default system workspace room if it appears
+			if envName == "default" {
+				continue
+			}
+
+			// Fetch the metadata attributes of the folder
+			info, err := file.Info()
+			if err != nil {
+				continue
+			}
+
+			// Calculate the age delta by subtracting its last modification time from right now
+			age := time.Since(info.ModTime())
+
+			// Format the age into a clean string (e.g., "Running for: 2h 15m")
+			ageString := fmt.Sprintf("%dh %dm", int(age.Hours()), int(age.Minutes())%60)
+
+			// THE SNARKY CURFEW MONITOR SYSTEM
+			// If the environment was modified over 24 hours ago, throw a friendly nudge
+			snarkyRemark := ""
+			if age.Hours() > 24 {
+				snarkyRemark = "Left the lights on, eh? Run < idp --name " + envName + " --destroy > to save our cloud budget!"
+			} else {
+				snarkyRemark = "Still a fresh sandbox. Happy Testing!"
+			}
+
+			// Print the aggregated metadata line
+			fmt.Printf("Name:  %-20s [Last Modification: %s]%s\n", envName, ageString, snarkyRemark)
 		}
 	}
+
 	fmt.Println("===========================================")
 	fmt.Println("Reminder: Don't forget to clear up old environments when finished testing!")
 }
 
-// Luke this probably will need testing
 // Terraform Handoff
 func runTerraform(action string, envName string, vpcID string, subnetID string) error {
 	fmt.Printf("Communicating with Terraform to execute: %s...\n\n", strings.ToUpper(action))
+	// First, Ensure the workspace exists and select it
+	// We run 'terraform workspace select <name>' or 'new' if it's missing.
+	// Check if the workspace exists by attempting to select it first.
+	selectCmd := exec.Command("terraform", "-chdir=./modules/idp-env", "workspace", "select", envName)
+	// If selecting fails, it means the workspace doesn't exist yet! We create it.
+	if err := selectCmd.Run(); err != nil {
+		fmt.Printf("Creating fresh isolation workspace room: '%s'...\n", envName)
+		newCmd := exec.Command("terraform", "-chdir=./modules/idp-env", "workspace", "new", envName)
+		if err := newCmd.Run(); err != nil {
+			return fmt.Errorf("Failed to create new state workspace: %v", err)
+		}
+	}
 
-	// Construct the command-line execution string dynamically
-	// Point Terraform to our reusable child module folder using -state mapping
-	// cmd := exec.Command("terraform", action, "-auto-approve",
-	// 	"-state=terraform.tfstate.d/"+envName+".tfstate", // Isolate each dev's tracking receipts!
-	// 	"-var", "env_name="+envName,
-	// 	"-var", "vpc_id="+vpcID,
-	// 	"-var", "subnet_id="+subnetID,
-	// 	"./modules/idp-env", // Target our reusable factory module folder
-	// )
-	cmd := exec.Command("terraform",
-		"-chdir=./modules/idp-env", // 1. Global flag ALWAYS goes first to set the room
-		action,                     // 2. The action (apply or destroy)
-		"-auto-approve",            // 3. Automation flag
-		// 4. We use "../../" because Terraform is now standing inside the module folder
-		// and needs to reach back out to the root to save the dynamic state tracking slip!
-		"-state=../../terraform.tfstate.d/"+envName+".tfstate",
+	// Run the lifecycle action inside that isolated workspace, Constructing the command-line execution string dynamically
+	cmd := exec.Command("terraform", "-chdir=./modules/idp-env", action, "-auto-approve",
 		"-var", "env_name="+envName,
 		"-var", "vpc_id="+vpcID,
 		"-var", "subnet_id="+subnetID,
@@ -146,22 +167,19 @@ func runTerraform(action string, envName string, vpcID string, subnetID string) 
 	return nil
 }
 
-// Luke don't forget to test this all: create and destroy!
+// Tests passed, here's where the magic happens
 func main() {
 	// Let them know stuff is happening
 	fmt.Println("IDP-CLI: Initiating sandbox deployment...")
 
-	//Get user's input name flags
-	//Luke this was added and commented out
+	//Get user input name flags
 	args, err := parseFlags()
-	// envName, err := parseFlags()
 	if err != nil {
 		fmt.Printf("Input error: %v\n", err)
 		return
 	}
 
-	// luke this a and b were added with the above code
-	// Step A: Route to the List Processor if requested
+	// Route to the List Processor if requested
 	if args.IsList {
 		fmt.Println("Checking for active sandboxes...")
 		listEnvironments()
@@ -175,14 +193,13 @@ func main() {
 		return
 	}
 
-	// Step B: Otherwise, proceed to standard Terraform Handoff ; Determine the core lifecycle action
-	//luke there's an error because terraform logic below is commented out
+	// Terraform Setup; Determine the core lifecycle action
 	tfAction := "apply"
 	if args.IsDestroy {
 		tfAction = "destroy"
 	}
 
-	// 4. Execute the Terraform Handoff (Flat Guard Clause)
+	// Terraform Handoff (Flat Guard Clause)
 	err = runTerraform(tfAction, args.EnvName, vpcID, subnetID)
 	if err != nil {
 		fmt.Printf("\nTerraform Failure: %v\n", err)
@@ -192,6 +209,13 @@ func main() {
 	// Happy Path
 	if args.IsDestroy {
 		fmt.Printf("Target ENV named %s has been torn down successfully!\n", args.EnvName)
+
+		// DISK PURGE AUTOMATION: Clean up the local empty workspace folder from your hard drive
+		// --destroy'd sandboxes were still showing in --list. This makes --list accurate after a successful --destroy.
+		workspacePath := "./modules/idp-env/terraform.tfstate.d/" + args.EnvName
+		fmt.Printf("🧹 Clearing empty workspace tracking data from disk: %s...\n", args.EnvName)
+		_ = os.RemoveAll(workspacePath) // Quietly wipes out the empty folder!
+
 	} else {
 		fmt.Printf("Connected to Foundation VPC: %s\n", vpcID)
 		fmt.Printf("Setup on Subnet: %s\n", subnetID)
@@ -200,7 +224,7 @@ func main() {
 }
 
 // Extra Network ID - Getters
-// For testing locally, if one had the master .hcl files, this is how Terraform would check the S3 state bucket
+// For testing locally, if one had the master .hcl files, this is how Terraform would check
 // and grab the necessary ID's
 func adminFetchFoundationIDs() (string, string, error) {
 	fmt.Println("Querying foundational infrastructure outputs...")
@@ -235,8 +259,3 @@ func hardCodedFetchFoundationIDs() (string, string, error) {
 
 	return phVpcID, phSubnetID, nil
 }
-
-// ##### del, but kept for now because i thought it was cool haha
-// // 3. Glue the background command's screen directly to your active terminal
-// cmd.Stdout = os.Stdout
-// cmd.Stderr = os.Stderr

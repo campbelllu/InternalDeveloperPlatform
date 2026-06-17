@@ -5,18 +5,13 @@ omg why are you still reading this? save yourself, look away! <3
 
 ---------------
 
-need to fix the deprecated state error
-│ Warning: Deprecated flag: -state
-│ 
-│ Use the "path" attribute within the "local" backend to specify a file for state storage
-
 
 ---------------
 
 IAM user and identity matrix
 aws cli setup
 aws session manager plugin
-config file downloaded, cli binary moved to /usr/local/bin/ folder for terminal use
+config file downloaded and moved into root folder we're working from, cli binary moved to /usr/local/bin/ folder for terminal use
 
 
 ---------------
