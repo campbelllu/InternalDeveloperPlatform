@@ -114,12 +114,23 @@ func runTerraform(action string, envName string, vpcID string, subnetID string) 
 
 	// Construct the command-line execution string dynamically
 	// Point Terraform to our reusable child module folder using -state mapping
-	cmd := exec.Command("terraform", action, "-auto-approve",
-		"-state=terraform.tfstate.d/"+envName+".tfstate", // Isolate each dev's tracking receipts!
+	// cmd := exec.Command("terraform", action, "-auto-approve",
+	// 	"-state=terraform.tfstate.d/"+envName+".tfstate", // Isolate each dev's tracking receipts!
+	// 	"-var", "env_name="+envName,
+	// 	"-var", "vpc_id="+vpcID,
+	// 	"-var", "subnet_id="+subnetID,
+	// 	"./modules/idp-env", // Target our reusable factory module folder
+	// )
+	cmd := exec.Command("terraform",
+		"-chdir=./modules/idp-env", // 1. Global flag ALWAYS goes first to set the room
+		action,                     // 2. The action (apply or destroy)
+		"-auto-approve",            // 3. Automation flag
+		// 4. We use "../../" because Terraform is now standing inside the module folder
+		// and needs to reach back out to the root to save the dynamic state tracking slip!
+		"-state=../../terraform.tfstate.d/"+envName+".tfstate",
 		"-var", "env_name="+envName,
 		"-var", "vpc_id="+vpcID,
 		"-var", "subnet_id="+subnetID,
-		"./modules/idp-env", // Target our reusable factory module folder
 	)
 
 	// THE SECRET SAUCE: Wire the background hidden screen directly to the active terminal

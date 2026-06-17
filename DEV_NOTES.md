@@ -4,6 +4,35 @@ Disregard this entire document. This is just notes for what I need to do next, o
 omg why are you still reading this? save yourself, look away! <3
 
 ---------------
+
+need to fix the deprecated state error
+│ Warning: Deprecated flag: -state
+│ 
+│ Use the "path" attribute within the "local" backend to specify a file for state storage
+
+
+---------------
+
+IAM user and identity matrix
+aws cli setup
+aws session manager plugin
+config file downloaded, cli binary moved to /usr/local/bin/ folder for terminal use
+
+
+---------------
+
+need to add notes about initializing local aws provider plugins for terraform in the modules folder
+terraform -chdir=./modules/idp-env init
+
+
+and then later talking about the modules .hcl files, how they'd be included with the CLI tool; which explains the above away
+Template Distribution & Packaging Architecture
+Architecture Choice: Local Directory Referencing vs. Native Binary Embedding / Remote Git Modules.
+Current State (MVP): The CLI targets the local disk path ./modules/idp-env for rapid local prototyping and debugging by a single systems administrator.
+Production Distribution Plan: To deliver a zero-footprint developer experience and completely obscure infrastructure source code from end-users, the platform would transition to Go Native Embedding (go build with the embed library) or configure Terraform to resolve source paths using a Private Git Repository Remote. This enables the distribution of a single, standalone binary to developer workstations while maintaining absolute centralized control of infrastructure logic.
+
+---------------
+
 rds is a cost sink and aws takes 5-10 minutes to spin up new RDS instances.
 
 
