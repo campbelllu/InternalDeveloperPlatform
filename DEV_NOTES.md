@@ -86,3 +86,47 @@ rm session-manager-plugin.deb
 ```
 
 Once verified, your local AWS CLI will automatically utilize this plugin behind the scenes whenever your Go CLI executes a terminal connection session.
+
+
+-----
+
+another installation instruction template for later
+## 📦 Developer Installation & Onboarding
+
+Because this tool compiles natively down to pure machine code, developers must build the binary locally to ensure perfect compatibility with their workstation hardware (Linux/macOS/Windows).
+
+### 1. Clone the Platform Universe
+```bash
+git clone https://github.com
+cd idp-platform
+```
+
+### 2. Initialize Local Network Boundaries
+The Platform Team manages core network shielding centrally. To bridge your CLI tool to the active corporate testing domain, create a hidden configuration file at the root of this project:
+
+```bash
+cat <<EOF > .idp-config.json
+{
+  "vpc_id": "vpc-YOUR_CORPORATE_VPC_ID",
+  "subnet_id": "subnet-YOUR_TARGET_RUNWAY_ID"
+}
+EOF
+```
+*(Note: Ask your Platform Administrator for the active AWS VPC and Subnet string tokens).*
+
+### 3. Compile and Install Natively
+Run the native Go compiler to generate your standalone executable binary and register it to your system execution path:
+
+```bash
+# Compile the source code natively for your exact CPU/OS
+go build -o idp
+
+# Global system installation
+sudo mv idp /usr/local/bin/
+```
+
+### 4. Verify the Launch Runway
+Open a fresh terminal window anywhere on your machine and invoke the tracking inventory tool:
+```bash
+idp --list
+```
