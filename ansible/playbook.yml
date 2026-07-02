@@ -1,0 +1,15 @@
+---
+- name: Configure Dynamic IDP Target
+  hosts: idp_target
+  become: true  # This tells Ansible to run commands as 'sudo' (admin)
+
+  tasks:
+    - name: Ensure the system package cache is up to date
+      apt:
+        update_cache: yes
+      # This is the equivalent of running 'sudo apt update' manually
+
+    - name: Print a victory message to the console
+      debug:
+        msg: "Success! Ansible successfully connected via SSM!"
+
