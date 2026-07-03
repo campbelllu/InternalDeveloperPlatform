@@ -141,3 +141,10 @@ idp --list
 ```
 
 > 💡 **Production Note**: For the purposes of this MVP portfolio demonstration, the tool utilizes a source-level compilation workflow (`go build`). In an enterprise deployment, this repository would configure a **CI/CD Pipeline (GitHub Actions)** utilizing Go's native cross-compilation engines (`GOOS`/`GOARCH`) to automatically publish pre-compiled standalone binary packages for Linux, macOS, and Windows directly to the GitHub Releases runway, requiring zero local Go dependencies for end-user developers.
+
+
+
+---
+
+part of setting up for ansible
+"Step 1: Ensure you have a standard local SSH identity key generated. If your ~/.ssh/ folder is empty, run ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N "" once before launching the CLI."

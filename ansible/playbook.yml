@@ -1,15 +1,40 @@
 ---
-- name: Configure Dynamic IDP Target
+- name: Provision Docker Sandbox
   hosts: idp_target
-  become: true  # This tells Ansible to run commands as 'sudo' (admin)
+  become: true
 
   tasks:
-    - name: Ensure the system package cache is up to date
+    - name: Update system package cache
       apt:
         update_cache: yes
-      # This is the equivalent of running 'sudo apt update' manually
+        force_apt_get: yes
 
-    - name: Print a victory message to the console
+    - name: Install Docker engine and core dependencies
+      apt:
+        name:
+          - curl
+          - git
+          - docker.io
+        state: present
+
+    - name: Ensure Docker service is running and enabled on boot
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+
+    - name: Add standard ubuntu user to the docker group
+      user:
+        name: ubuntu
+        groups: docker
+        append: yes
+      # Crucial Step: Allows Go CLI to deploy containers 
+      # Without needing to run every single command as 'sudo'!
+
+    - name: Verify cluster runtime engine
+      command: docker --version
+      register: docker_version
+
+    - name: Broadcast sandbox readiness metrics
       debug:
-        msg: "Success! Ansible successfully connected via SSM!"
-
+        msg: "SANDBOX PROVISIONED: Ready for deployments via runtime engine {{ docker_version.stdout }}"

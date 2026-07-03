@@ -123,7 +123,7 @@ func listEnvironments() {
 			}
 
 			// Print the aggregated metadata line
-			fmt.Printf("Name:  %-20s [Last Modification: %s]%s\n", envName, ageString, snarkyRemark)
+			fmt.Printf("Name:  %-20s [Last Modification: %s] %s\n", envName, ageString, snarkyRemark)
 		}
 	}
 

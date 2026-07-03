@@ -40,7 +40,7 @@ resource "aws_security_group" "sg" {
 }
 
 # ==============================================
-# IAM for SSM Setup
+# IAM & SSM Setup
 # ==============================================
 
 # Create the Role
@@ -67,6 +67,36 @@ resource "aws_iam_role_policy_attachment" "ssm_attach" {
 resource "aws_iam_instance_profile" "ssm_profile" {
   name = "${var.env_name}-ssm-profile"
   role = aws_iam_role.ssm_role.name
+}
+
+#luke added and question this
+# Create the specific policy for EC2 Instance Connect
+# resource "aws_iam_policy" "idp_instance_connect_policy" {
+#   name        = "idp-instance-connect-policy"
+#   description = "Allows the IDP engine to push temporary public keys to sandboxes"
+
+#   policy = jsonencode({
+#     Version = "2012-10-17"
+#     Statement = [
+#       {
+#         Effect   = "Allow"
+#         Action   = "ec2-instance-connect:SendSSHPublicKey"
+#         Resource = "arn:aws:ec2:us-east-2:598708931098:instance/*"
+#         # 💡 Note: This limits key pushing exclusively to instances in your account!
+#         Condition = {
+#           StringEquals = {
+#             "ec2:osuser" = "ubuntu"
+#           }
+#         }
+#       }
+#     ]
+#   })
+# }
+
+# Attach the policy directly to your terraformer user
+resource "aws_iam_user_policy_attachment" "attach_connect_to_terraformer" {
+  user       = "terraformer" # Matches your AWS ARN username string
+  policy_arn = aws_iam_policy.idp_instance_connect_policy.arn
 }
 
 # ==============================================
