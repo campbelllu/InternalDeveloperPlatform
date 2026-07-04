@@ -18,6 +18,9 @@ type IDPConfig struct {
 	SubnetID string `json:"subnet_id"`
 }
 
+// TODO: In a production enterprise deployment, replace this local file read
+// with an authenticated API call to HashiCorp Vault or AWS Secrets Manager.
+// luke edit the above comment to reflect that this should be vaulted!
 func fetchFoundationIDs() (string, string, error) {
 	fmt.Println("Fetching network boundaries from local configuration file...")
 
@@ -219,7 +222,7 @@ func main() {
 	} else {
 		fmt.Printf("Connected to Foundation VPC: %s\n", vpcID)
 		fmt.Printf("Setup on Subnet: %s\n", subnetID)
-		fmt.Printf("Target ENV Name, Launched Successfully: %s\n", args.EnvName)
+		fmt.Printf("Test ENV: %s, Launched Successfully!\n", args.EnvName)
 	}
 }
 

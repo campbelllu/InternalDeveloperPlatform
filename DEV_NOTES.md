@@ -146,5 +146,18 @@ idp --list
 
 ---
 
-part of setting up for ansible
-"Step 1: Ensure you have a standard local SSH identity key generated. If your ~/.ssh/ folder is empty, run ssh-keygen -t rsa -b 4096 -f ~/.ssh/id_rsa -N "" once before launching the CLI."
+check if docker runs on new nodes notes:
+check services:
+
+aws ssm start-session \
+  --target YOUR_NEW_INSTANCE_ID \
+  --document-name AWS-StartNonInteractiveCommand \
+  --parameters '{"command": ["docker --version"]}'
+
+aws ssm start-session \
+  --target YOUR_NEW_INSTANCE_ID \
+  --document-name AWS-StartNonInteractiveCommand \
+  --parameters '{"command": ["systemctl status docker --no-pager"]}'
+
+otherwise to jump inside:
+aws ssm start-session --target YOUR_NEW_INSTANCE_ID

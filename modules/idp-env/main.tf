@@ -69,7 +69,9 @@ resource "aws_iam_instance_profile" "ssm_profile" {
   role = aws_iam_role.ssm_role.name
 }
 
-#luke added and question this
+# Chosen to not use this as adding Ansible to this project is a good example of scope creep
+# This particular sandbox-making CLI tool doesn't need that level of management
+# Terraform and Go will handle the sandboxes being Docker-ready and pushing the image there for testing
 # Create the specific policy for EC2 Instance Connect
 # resource "aws_iam_policy" "idp_instance_connect_policy" {
 #   name        = "idp-instance-connect-policy"
@@ -82,7 +84,7 @@ resource "aws_iam_instance_profile" "ssm_profile" {
 #         Effect   = "Allow"
 #         Action   = "ec2-instance-connect:SendSSHPublicKey"
 #         Resource = "arn:aws:ec2:us-east-2:598708931098:instance/*"
-#         # 💡 Note: This limits key pushing exclusively to instances in your account!
+#         # Note: This limits key pushing exclusively to instances in your account!
 #         Condition = {
 #           StringEquals = {
 #             "ec2:osuser" = "ubuntu"
@@ -92,15 +94,14 @@ resource "aws_iam_instance_profile" "ssm_profile" {
 #     ]
 #   })
 # }
-
 # Attach the policy directly to your terraformer user
-resource "aws_iam_user_policy_attachment" "attach_connect_to_terraformer" {
-  user       = "terraformer" # Matches your AWS ARN username string
-  policy_arn = aws_iam_policy.idp_instance_connect_policy.arn
-}
+# resource "aws_iam_user_policy_attachment" "attach_connect_to_terraformer" {
+#   user       = "terraformer" # Matches your AWS ARN username string
+#   policy_arn = aws_iam_policy.idp_instance_connect_policy.arn
+# }
 
 # ==============================================
-# Data Lookups 
+# Data Lookups - This could be in data.tf, but it's the sole inhabitor, so to keep file structure clean, it was left here
 # ==============================================
 
 # Automatically find the latest Ubuntu 22.04 AMI for instance setup
@@ -131,7 +132,21 @@ resource "aws_instance" "dev_node" {
   user_data = <<-EOF
               #!/bin/bash
               # Create a cron job inside the EC2 to shut down automatically every Friday at 21:00 (9 PM)
-              echo "0 21 * * 5 root /sbin/shutdown -h now" >> /etc/crontab
+              echo "0 21 * * 5 root /sbin/shutdown -h now" > /etc/cron.d/weekly-idp-cleanup 
+              # fed originally into: >> /etc/crontab; the above would be best practice for more permanent ec2's
+
+              # Update the operating system package registry
+              apt-get update -y
+              
+              # Install Docker and its core dependencies cleanly
+              apt-get install -y curl git docker.io
+              
+              # Ensure the Docker engine starts up and stays on automatically
+              systemctl start docker
+              systemctl enable docker
+              
+              # Give the standard ubuntu user permission to use Docker without sudo
+              usermod -aG docker ubuntu
               EOF
 
   tags = { Name = var.env_name
