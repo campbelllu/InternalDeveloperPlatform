@@ -5,14 +5,10 @@ omg why are you still reading this? save yourself, look away! <3
 
 ---------------
 
-
----------------
-
 IAM user and identity matrix
 aws cli setup
 aws session manager plugin
 config file downloaded and moved into root folder we're working from, cli binary moved to /usr/local/bin/ folder for terminal use
-
 
 ---------------
 
@@ -66,98 +62,19 @@ the cost containment protocol
 
 --------------------
 
-intro?
-"An automated Internal Developer Platform (IDP) suite that enables engineers to spin up identity-secured, zero-ingress cloud sandboxes with a single command. Built using Go as the execution orchestration binary, Terraform as the immutable infrastructure engine, and Ansible as the OS hardening and container deployment framework."
-
-2. The Architectural Design Records (ADRs)This is where you address the advanced topics we discussed (Remote state vs. config files, cross-compilation pipelines, Shared runways vs. dynamic subnets). Instead of weaving these long paragraphs into your installation steps, group them under a dedicated "Architectural Decisions" section.Use bold bullet points to state the Constraint, your MVP Choice, and your Production Scaling Plan. This keeps the reading punchy and incredibly high-utility.
-
-3. Onboarding & InstallationKeep this strictly restricted to the terminal code-blocks we mapped out. Developers just want to copy-paste commands to get the tool running; they don't want to read essays while configuring their path.
 
 
 
-### Prerequisites: Local Session Manager Plugin (Ubuntu/Linux Mint)
-Because this platform utilizes identity-based tunneling instead of legacy SSH key pairs, developers must install the AWS Session Manager plugin locally to access their sandboxes.
 
-Run the following commands in your terminal to download and install the official 64-bit Debian package:
-
-```bash
-# 1. Download the official package directly from the AWS S3 bundle storage
-curl "https://s3.amazonaws.com/session-manager-downloads/plugin/latest/ubuntu_64bit/session-manager-plugin.deb" -o "session-manager-plugin.deb"
-
-# 2. Install the package locally
-sudo dpkg -i session-manager-plugin.deb
-
-# 3. Verify the installation succeeds
-session-manager-plugin --version
-
-# 4. Clean up the installer binary
-rm session-manager-plugin.deb
-```
-
-Once verified, your local AWS CLI will automatically utilize this plugin behind the scenes whenever your Go CLI executes a terminal connection session.
 
 
 -----
 
 another installation instruction template for later
-## 📦 Developer Installation & Onboarding
 
-Because this tool compiles natively down to pure machine code, developers must build the binary locally to ensure perfect compatibility with their workstation hardware (Linux/macOS/Windows).
-
-### 1. Clone the Platform Universe
-```bash
-git clone https://github.com
-cd idp-platform
-```
-
-### 2. Initialize Local Network Boundaries
-The Platform Team manages core network shielding centrally. To bridge your CLI tool to the active corporate testing domain, create a hidden configuration file at the root of this project:
-
-```bash
-cat <<EOF > .idp-config.json
-{
-  "vpc_id": "vpc-YOUR_CORPORATE_VPC_ID",
-  "subnet_id": "subnet-YOUR_TARGET_RUNWAY_ID"
-}
-EOF
-```
-*(Note: Ask your Platform Administrator for the active AWS VPC and Subnet string tokens).*
-
-### 3. Compile and Install Natively
-Run the native Go compiler to generate your standalone executable binary and register it to your system execution path:
-
-```bash
-# Compile the source code natively for your exact CPU/OS
-go build -o idp
-
-# Global system installation
-sudo mv idp /usr/local/bin/
-```
-
-### 4. Verify the Launch Runway
-Open a fresh terminal window anywhere on your machine and invoke the tracking inventory tool:
-```bash
-idp --list
-```
-
-> 💡 **Production Note**: For the purposes of this MVP portfolio demonstration, the tool utilizes a source-level compilation workflow (`go build`). In an enterprise deployment, this repository would configure a **CI/CD Pipeline (GitHub Actions)** utilizing Go's native cross-compilation engines (`GOOS`/`GOARCH`) to automatically publish pre-compiled standalone binary packages for Linux, macOS, and Windows directly to the GitHub Releases runway, requiring zero local Go dependencies for end-user developers.
 
 
 
 ---
 
-check if docker runs on new nodes notes:
-check services:
 
-aws ssm start-session \
-  --target YOUR_NEW_INSTANCE_ID \
-  --document-name AWS-StartNonInteractiveCommand \
-  --parameters '{"command": ["docker --version"]}'
-
-aws ssm start-session \
-  --target YOUR_NEW_INSTANCE_ID \
-  --document-name AWS-StartNonInteractiveCommand \
-  --parameters '{"command": ["systemctl status docker --no-pager"]}'
-
-otherwise to jump inside:
-aws ssm start-session --target YOUR_NEW_INSTANCE_ID
