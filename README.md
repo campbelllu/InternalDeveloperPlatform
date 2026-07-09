@@ -38,7 +38,7 @@ Foundation folder contains the underlying infrastructure, simulating what would 
 
 Modules folder contains any infrastructure or tooling that the CLI will later implement. `idp-env` holds the CLI functionality for building individual developer internal development platforms. [This MVP uses the local .hcl files within /Modules, but that would change in an enterprise environment.](#modules)
 
-Ansible folder contains the `Ansible` playbook and supporting files necessary to integrate itself into the CLI tool. Using `AWS SSM`, it would bypass the need for an SSH connection, install dependencies, in this case Docker. This was included to show how this tool would be used properly in a production setting, deprecated in this Minimum Viable Product, explained further in the [ADR](#ADR).
+Ansible folder contains the `Ansible` playbook and supporting files necessary to integrate itself into the CLI tool. Using `AWS SSM`, it would bypass the need for an SSH connection, install dependencies, in this case Docker. This was included to show how this tool would be used properly in a production setting, deprecated in this Minimum Viable Product, explained further in the [ADR](#ansible).
 
 `Go` code for the CLI functionality is located in the root directory, `main.go`.
 
@@ -223,6 +223,13 @@ Why did I build it this way?
 >For this MVP, RDS is a cost sink and AWS takes 5-10 minutes to spin up new RDS instances. I intentionally opted out of dedicated AWS RDS instances per developer sandbox for these reasons.
 
 >For ephemeral developer testing, RDS introduces a 7-minute provisioning latency and a ~$15/month idle cost penalty per environment. The IDP provisions an EC2 node pre-configured for multi-container runtimes. Developers spin up their application and database side-by-side using docker-compose, implemented with a simple command of the CLI. This cuts environment creation time to under 45 seconds and maintains a near-zero cost profile.
+
+<a id="ansible"></a>
+#### Why is Ansible included here and not seemingly used anywhere?
+
+>For this MVP, Ansible is a good example of over-engineering. Lines 132-150 in /modules/idp-env/main.tf detail how terraform directly installs and launches Docker on the sandboxes upon creation. Ansible would be a lovely choice to manage configuration drift for servers that weren't so ephemeral, but in this case, with instances lasting sometimes as short as a simple test launch of a program, there is no need for all Ansible offers.
+
+>Included in this repository are example files, with notes therein on how they function, for a simple Ansible integration.
 
 </details>
 
