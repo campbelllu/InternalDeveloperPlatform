@@ -139,7 +139,7 @@ resource "aws_instance" "dev_node" {
               apt-get update -y
               
               # Install Docker and its core dependencies cleanly
-              apt-get install -y curl git docker.io
+              apt-get install -y curl git docker.io docker-compose-plugin
               
               # Ensure the Docker engine starts up and stays on automatically
               systemctl start docker

@@ -46,6 +46,7 @@ type CLIArgs struct {
 	EnvName   string
 	IsDestroy bool
 	IsList    bool
+	DeployURL string
 }
 
 func parseFlags() (CLIArgs, error) {
@@ -53,6 +54,7 @@ func parseFlags() (CLIArgs, error) {
 	namePtr := flag.String("name", "", "The env name of your custom sandbox environment (Required, unless using --list)")
 	destroyPtr := flag.Bool("destroy", false, "Set to true to tear down the specified environment")
 	listPtr := flag.Bool("list", false, "Set to true to list all currently running IDP environments")
+	deployPtr := flag.String("deploy", "", "The Git Repository URL to deploy")
 
 	// Tell Go to parse the incoming command-line flags
 	flag.Parse()
@@ -62,6 +64,7 @@ func parseFlags() (CLIArgs, error) {
 		EnvName:   strings.TrimSpace(*namePtr),
 		IsDestroy: *destroyPtr,
 		IsList:    *listPtr,
+		DeployURL: strings.TrimSpace(*deployPtr),
 	}
 
 	// If they want to list environments, they don't need to provide a name!
@@ -218,6 +221,8 @@ func main() {
 		workspacePath := "./modules/idp-env/terraform.tfstate.d/" + args.EnvName
 		fmt.Printf("🧹 Clearing empty workspace tracking data from disk: %s...\n", args.EnvName)
 		_ = os.RemoveAll(workspacePath) // Quietly wipes out the empty folder!
+
+	} else if args.DeployURL != "" {
 
 	} else {
 		fmt.Printf("Connected to Foundation VPC: %s\n", vpcID)
