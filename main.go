@@ -173,6 +173,54 @@ func runTerraform(action string, envName string, vpcID string, subnetID string) 
 	return nil
 }
 
+// The entire following block is commented out, simply to represent how this tool would deploy code
+// DeployConfig holds our targets
+// type DeployConfig struct {
+// 	InstanceID string
+// 	RepoURL    string
+// }
+
+// func executeDeployment(targetID string, gitRepoURL string) {
+// 	fmt.Printf("IDP-CLI: Initiating GitOps deployment on target node [%s]...\n", targetID)
+
+// 	// Clean up any old code and clone the target external repo into the server workspace
+// 	// We run these commands sequentially inside a clean directory on the server
+// 	remoteCommands := fmt.Sprintf(
+// 		"rm -rf ~/app-workspace && git clone %s ~/app-workspace && cd ~/app-workspace && docker compose up -d",
+// 		gitRepoURL,
+// 	)
+
+// 	// Build our non-interactive AWS SSM execution parameters string payload
+// 	params := map[string][]string{
+// 		"command": {remoteCommands},
+// 	)
+
+// 	paramsJSON, err := json.Marshal(params)
+// 	if err != nil {
+// 		fmt.Printf("Internal JSON parsing error: %v\n", err)
+// 		return
+// 	}
+
+// 	// Call the AWS CLI through Go's background os/exec shell interface
+// 	cmd := exec.Command("aws", "ssm", "start-session",
+// 		"--target", targetID,
+// 		"--document-name", "AWS-StartNonInteractiveCommand",
+// 		"--parameters", string(paramsJSON),
+// 	)
+
+// 	// Stream stdout and stderr outputs dynamically to the developer's console
+// 	cmd.Stdout = os.Stdout
+// 	cmd.Stderr = os.Stderr
+
+// 	fmt.Println("🛰️  Streaming remote execution logs from the sandbox...")
+// 	if err := cmd.Run(); err != nil {
+// 		fmt.Printf("Deployment lifecycle failed: %v\n", err)
+// 		return
+// 	}
+
+// 	fmt.Println("SUCCESS: Application sandbox is live! Docker Compose stacks are fully provisioned.")
+// }
+
 // Tests passed, here's where the magic happens
 func main() {
 	// Let them know stuff is happening
@@ -223,7 +271,8 @@ func main() {
 		_ = os.RemoveAll(workspacePath) // Quietly wipes out the empty folder!
 
 	} else if args.DeployURL != "" {
-
+		// Code for deployment would go here, with a rudimentary example given of the above function to show its use only
+		// executeDeployment(targetID string, gitRepoURL string)
 	} else {
 		fmt.Printf("Connected to Foundation VPC: %s\n", vpcID)
 		fmt.Printf("Setup on Subnet: %s\n", subnetID)

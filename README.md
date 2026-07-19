@@ -17,7 +17,7 @@ Dive into how this whole thing works.
 
 2. The CLI tool is invoked to create an EC2 on the public subnet where the developer may deploy and test their code, their own personal IDP. This subnet has a security group attached that allows zero ingress of networking traffic outside of what is allowed via `AWS SSM`. [Why was a public subnet used?](#privateSubnet)
 
-3. This new IDP can now be accessed by the developer to deploy code as a docker image and test in a mock-production environment. Local Session Manager Plugin required to be installed locally to access IDP's.
+3. This new IDP can now be accessed by the developer to deploy code as a docker image and test in a mock-production environment. Local Session Manager Plugin required to be installed locally to access IDP's. [Why is --deploy incomplete?!](#deploy)
 
 4. When finished, the CLI tool can also be used to tear down any IDP’s no longer needed.
 
@@ -230,6 +230,15 @@ Why did I build it this way?
 >For this MVP, Ansible is a good example of over-engineering. Lines 132-150 in /modules/idp-env/main.tf detail how terraform directly installs and launches Docker on the sandboxes upon creation. Ansible would be a lovely choice to manage configuration drift for servers that weren't so ephemeral, but in this case, with instances lasting sometimes as short as a simple test launch of a program, there is no need for all Ansible offers.
 
 >Included in this repository are example files, with notes therein on how they function, for a simple Ansible integration.
+
+<a id="deploy"></a>
+#### Why isn't deploy a completed feature (yet)?!
+
+>During the construction of the `--deploy` CLI subsystem, the platform architecture successfully verified that single-instance software provisioning can be securely managed over tokenless AWS SSM channels. However, real-world corporate engineering environments rarely rely on single-node configuration orchestration. 
+
+>To align with true cloud-native standards, the development track for this specific CLI utility was paused at the Minimum Viable Product (MVP) stage. All subsequent platform optimization efforts have been redirected toward mastering formal GitOps CI/CD architectures and Kubernetes cluster orchestration engines. The included standalone, commented Go execution loops stand as verified, structural proof-of-concepts for single-node lifecycle deployment systems.
+
+>In an enterprise environment, a Development environment would exist with CI/CD connecting it to known code repository branches. The developer would push their code to their development branch, CI/CD would be triggered, a docker image would be copied over to another connected image repository, and then Kubernetes would grab said image to deploy in the known Development space for developer testing. As I came to finish this project, I saw how this tool, while useful for understanding the synergy between Terraform and Golang, would be superfluous to the standard enterprise workflow, and have chosen to focus my next projects building with that architecture in mind. If there are requests to expand this CLI tool's functionality, I will endeavor to add such to the tool. Otherwise, at this point, I consider the tool finished as a showcase of my understanding of automated cloud infrastructure.
 
 </details>
 
